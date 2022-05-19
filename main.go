@@ -19,7 +19,8 @@ const light = "░░"  // U+2591
 const medium = "▒▒" // U+2592
 const dark = "▓▓"   // U+2593
 const full = "██"   // U+2588
-var charList = []string{empty, full, dark, medium, light}
+var invertedList = []string{empty, full, dark, medium, light}
+var normalList = []string{empty, light, medium, dark, full}
 
 // SortableColor implements the sort.Interface for colors, sorting on the
 // light value of colors.
@@ -50,18 +51,29 @@ func (s SortableColor) Less(i, j int) bool {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		usage := `Usage: %s <image>
+	usage := `Usage: %s [--inverted|-i] <image>
 
 Convert a pixel art image to unicode characters. The image must be a PNG
 file with transparency, and it must have at most %d colors.
-`
 
+By default, the unicode characters are sorted in a way better fitting for
+dark-themed terminals. To invert the colors, use --inverted.
+`
+	charList := normalList
+
+	if argc := len(os.Args); argc != 2 && argc != 3 {
+
+		fmt.Printf(usage, os.Args[0], len(charList))
+		return
+	} else if val := os.Args[1]; argc == 3 && (val == "--inverted" || val == "-i") {
+		charList = invertedList
+	} else if argc == 3 {
+		fmt.Printf("Invalid argument '%s'! Expected --inverted (or nothing).\n\n", val)
 		fmt.Printf(usage, os.Args[0], len(charList))
 		return
 	}
 
-	fp, err := os.Open(os.Args[1])
+	fp, err := os.Open(os.Args[len(os.Args) - 1])
 	if err != nil {
 		fatalf("Failed to open the input file: %+v", err)
 	}
